@@ -6,7 +6,7 @@ using MAT
 #generovani dat
 
 M = matread("function_data-1D.mat")
-dataX = -109.0:110
+dataX = collect(1.0:220.0) .- 103
 dataY = vec(M["Bx_rez"])
 
 scale = 1.3*maximum(dataY)
@@ -17,9 +17,9 @@ Y = convert(Array{Float32}, dataY)
 
 #Flux model
 
-n = 512 # hidden neurons
+n = 5 # hidden neurons
 iter = 4000 # iterace
-model = Chain(NPU(1,n), NAU(n,5))
+model = Chain(NPU(1,n), NAU(n,1))
 
 psNPU = params(model[1])
 psNAU = params(model[2])
