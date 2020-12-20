@@ -61,7 +61,8 @@ function FreezeParams(Freeze)
   return ps
 end
 
-##
+#_______________________________________________________________________________
+
 InitParams()
 FreezeParams(2)
 tmp1 = vcat([params(model)[i][:] for i in 1:length(params(model))]...)
@@ -82,7 +83,7 @@ println("Grad Wr: ",norm(gs[ps[1]]))
 println("Grad Wi: ",norm(gs[ps[2]]))
 println("Grad A: ",norm(gs[ps[3]]))
 println("Grad b: ",norm(gs[ps[4]]))
-##
+#_______________________________________________________________________________
 
 y=(model(X'))
 plot!(X,Flux.data(y)[1,:],label="Predikce")
