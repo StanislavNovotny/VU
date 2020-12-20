@@ -1,61 +1,94 @@
 using Flux
 using Plots
 using NeuralArithmetic
+using LinearAlgebra
 
-#p(x) = (25.2.*((x.-0.004)./0.116) .+ 0.688) ./(((x.-0.014)./0.43).^4 +
-# 1.22.*((x.+0.27)./1.25).^3 .+ 0.25.*((x.-0.6)./0.72).^2 .+1.17.*
-# ((x.+0.34)./1.38).+0.001)
-
+#init
 p(x) = -x^3 + 4*x^2 - 16
+Dom = collect(1.0:0.1:6.0)
+Y = p.(Dom)
 
-dataX = collect(-7.0:0.01:7.0)
-
-Y = p.(dataX)
-plot(dataX,Y, label = "p(x)")
-#savefig("-7_7")
-
-X = Float32.(dataX)
+X = Float32.(Dom)
 Y = Float32.(Y)
 
-iter = 3000 # iterace
+o = plot(X,Y,seriestype=:scatter,markersize = 1,label="data")
+
 model = Chain(NaiveNPU(1,2),Dense(2,1,identity))
 
-sqnorm(x) = sum(abs, x)
+Wr = [5,3]
+Wi = [0,0]
+A = [-5,4]
+b = [-16]
 
+FinalParams = [3, 2, 0, 0, -1, 4, -16]
+
+MaxIter = 8000
+sqnorm(x) = sum(abs, x)
 loss(x,y) = Flux.mse(model(x),y) +
               0*sum(sqnorm, Flux.params(model))
 
-
 opt = ADAM(0.01)
-LL = zeros(1,iter);
+ps = params(model)
+LL = zeros(1,MaxIter);
 
-psNPU = params(model[1]);
-psDense = params(model[2]);
+function InitParams()
+  params(model[1])[1][:] .= Wr
+  params(model[1])[2][:] .= Wi
+  params(model[2])[1][:] .= A
+  params(model[2])[2]    .= b
+  return ps
+end
 
-psNPU[1][1] = 3
-psNPU[1][2] = 2
-psNPU[2][1] = 0
-psNPU[2][2] = 0
-psDense[1][1] = -1
-psDense[1][2] = 4
-psDense[2][1] = -16
+function FreezeParams(Freeze)
+  tmp = 0
+  if Freeze < 2
+    tmp = 1
+  elseif Freeze < 4
+    tmp = 2
+  else
+    tmp = 3
+  end
 
-ps = params(model[2:end])
-delete!(ps,params(model[2])[1])
+  ps = params(model[tmp:end])
 
+  if Freeze%2 == 1
+    if Freeze == 1
+      delete!(ps,params(model[1])[1])
+    else
+      delete!(ps,params(model[2])[1])
+    end
+  end
+  return ps
+end
 
-for i=1:iter
+##
+InitParams()
+FreezeParams(2)
+tmp1 = vcat([params(model)[i][:] for i in 1:length(params(model))]...)
+for i=1:MaxIter
+  NoI = i
   l = loss(X',Y')
   gs = gradient(()->loss(X',Y'),ps)
   Flux.Optimise.update!(opt, ps, gs)
   LL[i]= l
+  if sum(abs.(tmp1 .- FinalParams) .< 0.01) == length(FinalParams)
+        println("Pocet iteraci: ",NoI)
+    break
+  end
 end
-
-o = plot(X,Y,seriestype=:scatter,markersize = 1,label="data")
+println("Parametry modelu: ",params(model))
+println("Hodnota ztratove fce: ",LL[NoI])
+println("Grad Wr: ",norm(gs[ps[1]]))
+println("Grad Wi: ",norm(gs[ps[2]]))
+println("Grad A: ",norm(gs[ps[3]]))
+println("Grad b: ",norm(gs[ps[4]]))
+##
 
 y=(model(X'))
 plot!(X,Flux.data(y)[1,:],label="Predikce")
 
-plot(LL')
+plot(LL', label="Lost function")
+
+plot(log.(LL)')
 
 #savefig("NN3k_psFREE")
