@@ -77,8 +77,11 @@ for i=1:MaxIter
     break
   end
 end
+
+gs = gradient(()->loss(X',Y'),ps)
+
 println("Parametry modelu: ",params(model))
-println("Hodnota ztratove fce: ",LL[NoI])
+println("Hodnota ztratove fce: ",LL[end])
 println("Grad Wr: ",norm(gs[ps[1]]))
 println("Grad Wi: ",norm(gs[ps[2]]))
 println("Grad A: ",norm(gs[ps[3]]))
@@ -86,7 +89,7 @@ println("Grad b: ",norm(gs[ps[4]]))
 #_______________________________________________________________________________
 
 y=(model(X'))
-plot!(X,Flux.data(y)[1,:],label="Predikce")
+plot!(X,y[:],label="Predikce")
 
 plot(LL', label="Lost function")
 
