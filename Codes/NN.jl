@@ -13,9 +13,9 @@ Y = p.(X)
 
 model = Chain(NaiveNPU(1,2),Dense(2,1,identity))
 
-Wr = T.([5,3])
-Wi = T.([0,0])
-A = T.([-5,4])
+Wr = T.([5; 3])[:,:]
+Wi = T.([0; 0])[:,:]
+A = T.([-5 4])
 b = T.([-16])
 
 final_params = T.([3, 2, 0, 0, -1, 4, -16])
@@ -27,14 +27,14 @@ loss(x,y) = Flux.mse(model(x),y) +
 
 opt = ADAM(0.01)
 ps = params(model)
-LL = zeros(1,max_iter);
+LL = zeros(max_iter);
 
-function InitParams()
-  params(model[1])[1][:] .= Wr
-  params(model[1])[2][:] .= Wi
-  params(model[2])[1][:] .= A
-  params(model[2])[2]    .= b
-  return ps
+function InitParams!(model, Wr, Wi, A, b)
+  params(model[1])[1] .= Wr
+  params(model[1])[2] .= Wi
+  params(model[2])[1] .= A
+  params(model[2])[2] .= b
+  return nothing
 end
 
 function FreezeParams(freeze)
@@ -61,19 +61,13 @@ end
 
 #_______________________________________________________________________________
 
-InitParams()
+InitParams!(model, Wr, Wi, A, b)
 FreezeParams(2)
-tmp1 = vcat([params(model)[i][:] for i in 1:length(params(model))]...)
 for i=1:max_iter
   NoI = i
-  l = loss(X,Y)
+  LL[i] = loss(X,Y)
   gs = gradient(()->loss(X,Y),ps)
   Flux.Optimise.update!(opt, ps, gs)
-  LL[i]= l
-  if sum(abs.(tmp1 .- final_params) .< 0.01) == length(final_params)
-        println("Pocet iteraci: ",NoI)
-    break
-  end
 end
 
 gs = gradient(()->loss(X,Y),ps)
@@ -88,11 +82,11 @@ println("Grad b: ",norm(gs[ps[4]]))
 
 y=(model(X))
 
-plot(X[:],Y[:],seriestype=:scatter,markersize = 1,label="data")
+scatter(X[:],Y[:],markersize = 1,label="data")
 plot!(X[:],y[:],label="Predikce")
 
-plot(LL', label="Lost function")
+plot(LL, label="Lost function")
 
-plot(log.(LL)')
+plot(log.(LL))
 
 #savefig("NN3k_psFREE")
