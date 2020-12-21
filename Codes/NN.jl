@@ -3,6 +3,7 @@ using Plots
 using NeuralArithmetic
 using LinearAlgebra
 
+λ = 0
 T = Float32
 
 #init
@@ -22,8 +23,7 @@ final_params = T.([3, 2, 0, 0, -1, 4, -16])
 
 max_iter = 8000
 sqnorm(x) = sum(abs, x)
-loss(x,y) = Flux.mse(model(x),y) +
-              0*sum(sqnorm, Flux.params(model))
+loss(x,y,λ) = Flux.mse(model(x),y) + λ*sum(sqnorm, Flux.params(model))
 
 opt = ADAM(0.01)
 ps = params(model)
@@ -37,7 +37,7 @@ function InitParams!(model, Wr, Wi, A, b)
   return nothing
 end
 
-function FreezeParams(freeze)
+function FreezeParams!(model, freeze)
   tmp = 0
   if freeze < 2
     tmp = 1
@@ -62,15 +62,15 @@ end
 #_______________________________________________________________________________
 
 InitParams!(model, Wr, Wi, A, b)
-FreezeParams(2)
+FreezeParams!(model, 2)
 for i=1:max_iter
   NoI = i
-  LL[i] = loss(X,Y)
-  gs = gradient(()->loss(X,Y),ps)
+  LL[i] = loss(X,Y,λ)
+  gs = gradient(()->loss(X,Y,λ),ps)
   Flux.Optimise.update!(opt, ps, gs)
 end
 
-gs = gradient(()->loss(X,Y),ps)
+gs = gradient(()->loss(X,Y,λ),ps)
 
 println("Parametry modelu: ",params(model))
 println("Hodnota ztratove fce: ",LL[end])
