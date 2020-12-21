@@ -18,16 +18,16 @@ Wi = T.([0,0])
 A = T.([-5,4])
 b = T.([-16])
 
-FinalParams = T.([3, 2, 0, 0, -1, 4, -16])
+final_params = T.([3, 2, 0, 0, -1, 4, -16])
 
-MaxIter = 8000
+max_iter = 8000
 sqnorm(x) = sum(abs, x)
 loss(x,y) = Flux.mse(model(x),y) +
               0*sum(sqnorm, Flux.params(model))
 
 opt = ADAM(0.01)
 ps = params(model)
-LL = zeros(1,MaxIter);
+LL = zeros(1,max_iter);
 
 function InitParams()
   params(model[1])[1][:] .= Wr
@@ -37,11 +37,11 @@ function InitParams()
   return ps
 end
 
-function FreezeParams(Freeze)
+function FreezeParams(freeze)
   tmp = 0
-  if Freeze < 2
+  if freeze < 2
     tmp = 1
-  elseif Freeze < 4
+  elseif freeze < 4
     tmp = 2
   else
     tmp = 3
@@ -49,8 +49,8 @@ function FreezeParams(Freeze)
 
   ps = params(model[tmp:end])
 
-  if Freeze%2 == 1
-    if Freeze == 1
+  if freeze%2 == 1
+    if freeze == 1
       delete!(ps,params(model[1])[1])
     else
       delete!(ps,params(model[2])[1])
@@ -64,13 +64,13 @@ end
 InitParams()
 FreezeParams(2)
 tmp1 = vcat([params(model)[i][:] for i in 1:length(params(model))]...)
-for i=1:MaxIter
+for i=1:max_iter
   NoI = i
   l = loss(X,Y)
   gs = gradient(()->loss(X,Y),ps)
   Flux.Optimise.update!(opt, ps, gs)
   LL[i]= l
-  if sum(abs.(tmp1 .- FinalParams) .< 0.01) == length(FinalParams)
+  if sum(abs.(tmp1 .- final_params) .< 0.01) == length(final_params)
         println("Pocet iteraci: ",NoI)
     break
   end
@@ -88,8 +88,8 @@ println("Grad b: ",norm(gs[ps[4]]))
 
 y=(model(X))
 
-plot(X,Y,seriestype=:scatter,markersize = 1,label="data")
-plot!(X,y,label="Predikce")
+plot(X[:],Y[:],seriestype=:scatter,markersize = 1,label="data")
+plot!(X[:],y[:],label="Predikce")
 
 plot(LL', label="Lost function")
 
