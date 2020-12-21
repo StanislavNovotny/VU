@@ -8,7 +8,7 @@ T = Float32
 #init
 p(x) = -x^3 + 4*x^2 - 16
 
-X = T.(1.0:0.1:6.0)
+X = Matrix(T.(1.0:0.1:6.0)')
 Y = p.(X)
 
 model = Chain(NaiveNPU(1,2),Dense(2,1,identity))
@@ -66,8 +66,8 @@ FreezeParams(2)
 tmp1 = vcat([params(model)[i][:] for i in 1:length(params(model))]...)
 for i=1:MaxIter
   NoI = i
-  l = loss(X',Y')
-  gs = gradient(()->loss(X',Y'),ps)
+  l = loss(X,Y)
+  gs = gradient(()->loss(X,Y),ps)
   Flux.Optimise.update!(opt, ps, gs)
   LL[i]= l
   if sum(abs.(tmp1 .- FinalParams) .< 0.01) == length(FinalParams)
@@ -76,7 +76,7 @@ for i=1:MaxIter
   end
 end
 
-gs = gradient(()->loss(X',Y'),ps)
+gs = gradient(()->loss(X,Y),ps)
 
 println("Parametry modelu: ",params(model))
 println("Hodnota ztratove fce: ",LL[end])
@@ -86,10 +86,10 @@ println("Grad A: ",norm(gs[ps[3]]))
 println("Grad b: ",norm(gs[ps[4]]))
 #_______________________________________________________________________________
 
-y=(model(X'))
+y=(model(X))
 
 plot(X,Y,seriestype=:scatter,markersize = 1,label="data")
-plot!(X,y[:],label="Predikce")
+plot!(X,y,label="Predikce")
 
 plot(LL', label="Lost function")
 
