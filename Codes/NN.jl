@@ -11,8 +11,6 @@ p(x) = -x^3 + 4*x^2 - 16
 X = T.(1.0:0.1:6.0)
 Y = p.(X)
 
-o = plot(X,Y,seriestype=:scatter,markersize = 1,label="data")
-
 model = Chain(NaiveNPU(1,2),Dense(2,1,identity))
 
 Wr = T.([5,3])
@@ -89,6 +87,8 @@ println("Grad b: ",norm(gs[ps[4]]))
 #_______________________________________________________________________________
 
 y=(model(X'))
+
+plot(X,Y,seriestype=:scatter,markersize = 1,label="data")
 plot!(X,y[:],label="Predikce")
 
 plot(LL', label="Lost function")
