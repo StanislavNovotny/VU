@@ -3,24 +3,24 @@ using Plots
 using NeuralArithmetic
 using LinearAlgebra
 
+T = Float32
+
 #init
 p(x) = -x^3 + 4*x^2 - 16
-Dom = collect(1.0:0.1:6.0)
-Y = p.(Dom)
 
-X = Float32.(Dom)
-Y = Float32.(Y)
+X = T.(1.0:0.1:6.0)
+Y = p.(X)
 
 o = plot(X,Y,seriestype=:scatter,markersize = 1,label="data")
 
 model = Chain(NaiveNPU(1,2),Dense(2,1,identity))
 
-Wr = [5,3]
-Wi = [0,0]
-A = [-5,4]
-b = [-16]
+Wr = T.([5,3])
+Wi = T.([0,0])
+A = T.([-5,4])
+b = T.([-16])
 
-FinalParams = [3, 2, 0, 0, -1, 4, -16]
+FinalParams = T.([3, 2, 0, 0, -1, 4, -16])
 
 MaxIter = 8000
 sqnorm(x) = sum(abs, x)
