@@ -14,7 +14,7 @@ Y = p.(X)
 
 model = Chain(NaiveNPU(1,2),Dense(2,1,identity))
 
-Wr = T.([5; 3])[:,:]
+Wr = T.([3; 2])[:,:]
 Wi = T.([0; 0])[:,:]
 A = T.([-5 4])
 b = T.([-16])
@@ -28,10 +28,10 @@ ps = params(model)
 LL = zeros(max_iter);
 
 function InitParams!(model, Wr, Wi, A, b)
-  params(model[1])[1] .= Wr
-  params(model[1])[2] .= Wi
-  params(model[2])[1] .= A
-  params(model[2])[2] .= b
+  !isempty(Wr) && (params(model[1])[1] .= Wr)
+  !isempty(Wi) && (params(model[1])[2] .= Wi)
+  !isempty(A) && (params(model[2])[1] .= A)
+  !isempty(b) && (params(model[2])[2] .= b)
   return nothing
 end
 
@@ -59,17 +59,18 @@ end
 
 #_______________________________________________________________________________
 
-InitParams!(model, Wr, Wi, A, b)
-ps = FreezeParams(model, 0)
+InitParams!(model, Wr, Wi, [], [])
+ps = FreezeParams(model, 2)
 for i=1:max_iter
   LL[i] = loss(X,Y,λ)
   gs = gradient(()->loss(X,Y,λ),ps)
   Flux.Optimise.update!(opt, ps, gs)
 end
 
+ps = params(model)
 gs = gradient(()->loss(X,Y,λ),ps)
 
-println("Parametry modelu: ",params(model))
+println("Parametry modelu: ",ps)
 println("Hodnota ztratove fce: ",LL[end])
 println("Grad Wr: ",norm(gs[ps[1]]))
 println("Grad Wi: ",norm(gs[ps[2]]))
@@ -77,7 +78,7 @@ println("Grad A: ",norm(gs[ps[3]]))
 println("Grad b: ",norm(gs[ps[4]]))
 #_______________________________________________________________________________
 
-y=(model(X))
+y = model(X)
 
 scatter(X[:],Y[:],markersize = 1,label="data")
 plot!(X[:],y[:],label="Predikce")
