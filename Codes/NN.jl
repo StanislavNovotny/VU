@@ -19,8 +19,6 @@ Wi = T.([0; 0])[:,:]
 A = T.([-5 4])
 b = T.([-16])
 
-final_params = T.([3, 2, 0, 0, -1, 4, -16])
-
 max_iter = 8000
 sqnorm(x) = sum(abs, x)
 loss(x,y,λ) = Flux.mse(model(x),y) + λ*sum(sqnorm, Flux.params(model))
@@ -37,7 +35,7 @@ function InitParams!(model, Wr, Wi, A, b)
   return nothing
 end
 
-function FreezeParams!(model, freeze)
+function FreezeParams(model, freeze)
   tmp = 0
   if freeze < 2
     tmp = 1
@@ -62,9 +60,8 @@ end
 #_______________________________________________________________________________
 
 InitParams!(model, Wr, Wi, A, b)
-FreezeParams!(model, 2)
+ps = FreezeParams(model, 0)
 for i=1:max_iter
-  NoI = i
   LL[i] = loss(X,Y,λ)
   gs = gradient(()->loss(X,Y,λ),ps)
   Flux.Optimise.update!(opt, ps, gs)
