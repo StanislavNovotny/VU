@@ -105,3 +105,5 @@ s2 = table_to_tex(body2;
 
 print(s2)
 ##
+
+print(s2)
